@@ -1,58 +1,30 @@
-# Material used as aid to help complete assessment listed below:
-# Aid: https://pythonprogramming.net/python-threaded-port-scanner/
-
-
-# Subprocess for this application allows python to make commands usually achieved in a terminal
 import subprocess
-# Platform is used for multi platform accessibility in relation to conditions. Platform can show the OS type
 import platform
-# socket is needed to do port scan using the end points while opening up new TCP connection
 import socket
-# Imports threading for port scanner. Speeds up time it takes to scan
 import threading
-# Imports que to store new threads (workers)
 from queue import Queue
-# gives me access to correct date formats for database entry, general CRUD
 from datetime import date
-# Used for Regular Expressions, for validation
 import re
-
-# os being equal to platform allows me to see which OS the user is running so the correct code executes
 os = platform
-# locks down variables while running to avoid conflicts between threads
 print_lock = threading.Lock()
-
-# Will store data for pings and trace routes for future reference
 import sqlite3
-
-# Creates sql connection and database
 conn = sqlite3.connect('networkstats')
-
-# if conn already exists, pass else create the db for new user
 if conn:
     print('You have connected to the db')
 else:
-    # cursor gives access to execute methods to sqlite3 db
     cursor = conn.cursor()
-    # SQL Executes creating table with 3 columns. Primary key and auto increment is on for uniqueness per tuple
     cursor.execute('''CREATE TABLE stats (id INTEGER PRIMARY KEY, service VARCHAR, body VARCHAR, created_on DATE)''')
-    # Commit to database
     conn.commit()
-    # Close connection
     conn.close()
 
-
-# Main application class. Yes, the name is rather dodgy, but the context in its functionality is there
 class Penatron:
 
-    # First validation method. Looks similar to one below, however, only checks once
     def validation(self,ip):
         if re.match(r'(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)', ip):
             return True
         else:
             return False
 
-    # Validates host names, example: google.com, www.google.com, www.uws.ac.uk etc.
     def validationDomain(self, domain):
         for pings in domain:
              if re.match('(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)', pings):
@@ -60,18 +32,14 @@ class Penatron:
              else:
                  return False
 
-    # Validates IP using regular expression from the re library
     def validationIP(self, ip):
         for pings in ip:
-            # Expression looks for IPV4 pattern
             if re.match(r'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b', pings):
                 return True
             else:
                 return False
 
-    # Single host method. Uses 2 methods to ping from, either by ip or host name
     def singlehost(self, method):
-        # Data passed into singlehost parameter 'method' is stored into a method variable
         method = method
         result = self.validation(method)
 
@@ -83,29 +51,22 @@ class Penatron:
             print(' invalid host name used')
             exit()
 
-        # If statement checks users operating system for compatibility
         if os.system() == "Darwin":
             print('--- OS = MacOS ---')
             print('Running Ping, please wait until completion')
-            # Running ping 5 times, then store result into var called 'returned'
             returned = subprocess.run(['ping', '-c 5', method], capture_output=True)
-            # Use dict and use the stdout key and return value to stdout var
             stdout = returned.__dict__['stdout']
-            # turn returned data into string to avoid any possible issues contained within data
             toString = str(stdout)
-            # print to terminal
+        
             print(type(toString))
             print(toString)
-            # Save returned data to database
             print('--SAVED TO DATABASE--')
-            # Calls static class, passes in service type 'host' and passes in data which processes depending on service type
             Database('host', toString)
             input('press any key to proceed')
 
         elif os.system() == "Windows":
             print('--- OS = Windows ---')
             print('Running Ping, please wait until completion')
-            # Running ping 5 times
             returned = subprocess.run(['ping', method], capture_output=True)
             stdout = returned.__dict__['stdout']
             toString = str(stdout)
@@ -125,7 +86,6 @@ class Penatron:
             Database('host', toString)
             input('Continue? press any key')
 
-    # This method Pings multiple hosts using a for loop and stores each iteration of returned data into the db
     def multiplehostsIP(self, ip):
         method = ip
         result = self.validationIP(method)
@@ -135,25 +95,18 @@ class Penatron:
                 for choice in method:
                     print('--- OS = MacOS ---')
                     print('Running Ping, please wait until completion')
-                    # Running ping 5 times, then store result into var called 'returned'
                     returned = subprocess.run(['ping', '-c 5', choice], capture_output=True)
-                    # Use dict and use the stdout key and return value to stdout var
                     stdout = returned.__dict__['stdout']
-                    # turn returned data into string to avoid any possible issues contained within data
                     toString = str(stdout)
-                    # print to terminal
                     print(type(toString))
                     print(toString)
-                    # Save returned data to database
                     print('--SAVED TO DATABASE--')
-                    # Calls static class, passes in service type 'host' and passes in data which processes depending on service type
                     Database('host', toString)
 
             elif os.system() == "Windows":
                 for choice in method:
                     print('--- OS = Windows ---')
                     print('Running Ping, please wait until completion')
-                    # Running ping 5 times
                     returned = subprocess.run(['ping', choice], capture_output=True)
                     stdout = returned.__dict__['stdout']
                     toString = str(stdout)
@@ -165,7 +118,6 @@ class Penatron:
                 for choice in method:
                     print('Running Ping, please wait until completion')
                     print('--- OS = Linux ---')
-                    # Running ping 5 times
                     returned = subprocess.run(['ping', choice], capture_output=True)
                     stdout = returned.__dict__['stdout']
                     toString = str(stdout)
@@ -186,18 +138,12 @@ class Penatron:
                 for choice in method:
                     print('--- OS = MacOS ---')
                     print('Running Ping, please wait until completion')
-                    # Running ping 5 times, then store result into var called 'returned'
                     returned = subprocess.run(['ping', '-c 5', choice], capture_output=True)
-                    # Use dict and use the stdout key and return value to stdout var
                     stdout = returned.__dict__['stdout']
-                    # turn returned data into string to avoid any possible issues contained within data
                     toString = str(stdout)
-                    # print to terminal
                     print(type(toString))
                     print(toString)
-                    # Save returned data to database
                     print('--SAVED TO DATABASE--')
-                    # Calls static class, passes in service type 'host' and passes in data which processes depending on service type
                     Database('host', toString)
             elif os.system() == "Windows":
                 for choice in method:
@@ -214,7 +160,6 @@ class Penatron:
                 for choice in method:
                     print('Running Ping, please wait until completion')
                     print('--- OS = Linux ---')
-                    # Running ping 5 times
                     returned = subprocess.run(['ping', choice], capture_output=True)
                     stdout = returned.__dict__['stdout']
                     toString = str(stdout)
@@ -224,10 +169,7 @@ class Penatron:
         else:
             print('validation failed')
             exit()
-
-    # Traceroute function runs the traceroute command, and stores returned data into the db
     def traceroute(self, route):
-        # If statement checks users operating system for compatibility
         route = route
         result = self.validation(route)
         if result:
